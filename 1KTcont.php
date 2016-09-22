@@ -1,27 +1,37 @@
 <?php
 
+	//vÃµtab ja kopeerib faili sisu
+	
+	require ("../../config.php");
+	//echo hash("sha512", "b");
+
 	//Loogimine sisse muutujad
 	$loginEmailError = $loginPasswordError = "";
+	$loginEmail = "";
 	
 	//loomine muutujad
-	$signupEmailError = $signupPasswordError = $signupNickNameError = $signupSugu = "";
+	$signupEmailError = $signupEmail = $signupPasswordError = $signupNickNameError = $signupSugu = "";
 	
 	//Loogimine sisse
 
 	if (isset ($_POST["loginEmail"])) {
 		if (empty ($_POST["loginEmail"])) {
-			$loginEmailError = "* Väli on kohustuslik!";
+			$loginEmailError = "* VÃ¤li on kohustuslik!";
+		
+	} else {
+		//kui Email on korras
+		$loginEmail = $_POST ["loginEmail"];
+		
 		}
 	}
 	
-	
 	if (isset ($_POST["loginPassword"])) {
 		if (empty ($_POST["loginPassword"])) {
-			$loginPasswordError = "* Väli on kohustuslik!";
+			$loginPasswordError = "* VÃ¤li on kohustuslik!";
 		} else {
 			
 		}if (strlen ($_POST["loginPassword"]) <8)
-			$loginPasswordError = "* Parool peab olema vähemalt 8 tähemärkki pikk!";
+			$loginPasswordError = "* Parool peab olema vÃ¤hemalt 8 tÃ¤hemÃ¤rkki pikk!";
 	}
 	
 	//Kasutaja registreerimine
@@ -29,29 +39,79 @@
 	
 	if (isset ($_POST["signupEmail"])) {
 		if (empty ($_POST["signupEmail"])) {
-			$signupEmailError = "* Väli on kohustuslik!";
+			$signupEmailError = "* VÃ¤li on kohustuslik!";
+		} else {
+		//kui Email on korras
+		$signupEmail = $_POST ["signupEmail"];
+		
 		}
 	}
 	
 	
 	if (isset ($_POST["signupPassword"])) {
 		if (empty ($_POST["signupPassword"])) {
-			$signupPasswordError = "* Väli on kohustuslik!";
+			$signupPasswordError = "* VÃ¤li on kohustuslik!";
 		} else {
 			
 		}if (strlen ($_POST["signupPassword"]) <8)
-			$signupPasswordError = "* Parool peab olema vähemalt 8 tähemärkki pikk!";
+			$signupPasswordError = "* Parool peab olema vÃ¤hemalt 8 tÃ¤hemÃ¤rkki pikk!";
 	}
 	
 	
 	if (isset ($_POST["signupNickName"])) {
 		if (empty ($_POST["signupNickName"])) {
-			$signupNickNameError = "* Väli on kohustuslik!";
+			$signupNickNameError = "* VÃ¤li on kohustuslik!";
 		} else {
 			
 			}if (strlen ($_POST["signupNickName"]) <8)
-				$signupNickNameError = "* Nimi peab olema vähemalt 8 tähemärkki pikk!";
+				$signupNickNameError = "* Nimi peab olema vÃ¤hemalt 8 tÃ¤hemÃ¤rkki pikk!";
 	}
+	
+	// Kui pole Ã¼htegi viga
+	if( isset($_POST["signupEmail"]) &&
+		isset($_POST["signupPassword"]) &&
+		$signupEmailError == "" &&		
+		empty($signupPasswordError)
+		)
+		
+		{	
+			echo "Salvestan...<br>";
+			
+			echo "email: ".$signupEmail."<br>";
+			echo "password: ".$_POST["signupPassword"]."<br>";
+			
+			$password = hash("sha512", $_POST["signupPassword"]);
+			echo "password hashed: ".$password."<br>";
+			
+			//ÃœHENDUS
+			
+			$database = "if16_ksenbelo_4";
+			$mysqli = new mysqli($serverHost, $serverUsername, $serverPassword, $database);
+			
+			if ($mysqli->connect_error) {
+			die('Connect Error: ' . $mysqli->connect_error);
+			}
+			
+			//sqli rida
+			$stmt = $mysqli->prepare("INSERT INTO user_sample (email, password) VALUES (?, ?)");
+			
+			echo $mysqli->error;
+			
+			$stmt->bind_param("ss", $signupEmail, $password);
+			
+				if($stmt->execute()) {
+				echo "salvestamine Ãµnnestus";
+			
+				} else {
+				echo "ERROR ".$stmt->error;
+				
+				}
+				
+				$stmt->close();
+				$mysqli->close();
+				
+		}
+	
 	
 ?>
 
@@ -89,7 +149,7 @@
 				<form method="POST" >
 				
 					<label></label><br>
-					<input name="loginEmail" type = "email" placeholder="E-post">
+					<input name="loginEmail" type = "email" placeholder="E-post" value="<?=$loginEmail;?>">
 						<br><font color="red"><?php echo $loginEmailError; ?></font></br>
 					
 					<input name="loginPassword" type = "password" placeholder="Parool"> 
@@ -103,7 +163,7 @@
 				<form method="POST" >
 				
 					<label></label><br>	
-					<input name="signupEmail" type = "email" placeholder="E-post">
+					<input name="signupEmail" type = "email" placeholder="E-post" value="<?=$signupEmail;?>">
 						<br><font color="red"><?php echo $signupEmailError; ?></font></br>
 					
 					<input name="signupPassword" type = "password" placeholder="Parool"> 
@@ -112,14 +172,15 @@
 					<input name="signupNickName" placeholder="Nickname"> 
 						<br><font color="red"><?php echo $signupNickNameError; ?></font></br>
 					
-					<p><label for="sünnipäev">Sünnipäev:</label><br>
-					<input name= "sünnipäev" type="date" id="sünnipäev" required>
+					<p><label for="sÃ¼nnipÃ¤ev">SÃ¼nnipÃ¤ev:</label><br>
+					<input name= "sÃ¼nnipÃ¤ev" type="date" id="sÃ¼nnipÃ¤ev" required>
+					
 					
 					<p><label for="signupSugu">Sugu:</label><br>
 					<select name = "signupSugu"  id="signupSugu" required><br><br>
-					<option value="">Näita</option>
-					<option value="1">Mees</option>
-					<option value="2">Naine</option>
+					<option value="">NÃ¤ita</option>
+					<option value="Mees">Mees</option>
+					<option value="Naine">Naine</option>
 					</select><br><br>
 					
 
@@ -128,9 +189,9 @@
 				<h1>MVP idee</h1>
 				<form method="POST" >
 				<p class="MVPborder"><br>Minu MVP idee on luua veebileht, kus inimesed saaksid kirjutada
-				ülevaaded kohtades, kus nad sööma käisid, kas meeldinud toit/personaal/hind.
-				Tulevad kategooriad nagu asukoht(riig/linnas), tüüp (restoran/kohvik jne), 
-				hind, pallid (kui palju pallid antsid söögikohale).</p>
+				Ã¼levaaded kohtades, kus nad sÃ¶Ã¶ma kÃ¤isid, kas meeldinud toit/personaal/hind.
+				Tulevad kategooriad nagu asukoht(riig/linnas), tÃ¼Ã¼p (restoran/kohvik jne), 
+				hind, pallid (kui palju pallid antsid sÃ¶Ã¶gikohale).</p>
 				<br><br>
 				</center>	
 				</form>
